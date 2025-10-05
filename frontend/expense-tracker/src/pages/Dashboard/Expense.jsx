@@ -11,6 +11,9 @@ import ExpenseList from "../../components/Expense/ExpenseList";
 import DeleteAlert from "../../components/DeleteAlert";
 
 
+
+
+
 const Expense = () => {
   useUserAuth(); // kiểm tra auth
 
@@ -40,41 +43,52 @@ const Expense = () => {
     }
   };
 
-  const handleAddExpense = async (expense) => {
-    const { category, amount, date, icon } = expense;
+  
+const handleAddExpense = async (expense) => {
+  const { name, amount, date, icon } = expense;
 
-    // Validation Checks
-    if (!category.trim()) {
-      toast.error("Category is required.");
-      return;
-    }
+  // Log debug để xem dữ liệu trước khi gửi
+  console.log("Submitting expense:", { name, amount, date, icon });
 
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      toast.error("Amount should be a valid number greater than 0.");
-      return;
-    }
+  // Validation Checks
+  if (!name.trim()) {
+    toast.error("Name is required.");
+    return;
+  }
 
-    if (!date) {
-      toast.error("Date is required.");
-      return;
-    }
+  if (!amount || isNaN(amount) || Number(amount) <= 0) {
+    toast.error("Amount should be a valid number greater than 0.");
+    return;
+  }
 
-    try {
-      await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, {
-        category,
-        amount,
-        date,
-        icon,
-      });
+  if (!date) {
+    toast.error("Date is required.");
+    return;
+  }
 
+  try {
+    const response = await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, {
+      name,
+      amount,
+      date,
+      icon,
+    });
+
+    console.log("Response from backend:", response.data); // Log response
+
+    if (response.data) {
       toast.success("Expense added successfully!");
-      setOpenAddExpenseModal(false); // đóng modal sau khi thêm
+      setOpenAddExpenseModal(false);
       fetchExpenseDetails();
-    } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong while adding expense.");
     }
-  };
+  } catch (error) {
+    console.error("Add expense error:", error.response || error);
+    toast.error(
+      error.response?.data?.message || "Something went wrong while adding expense."
+    );
+  }
+};
+
 
   const handleDownloadExpenseDetails = async () => {
     try {
@@ -132,7 +146,8 @@ const Expense = () => {
             transactions={expenseData}
             onDelete={(id) => setOpenDeleteAlert({ show: true, data: id })}
             onDownload={handleDownloadExpenseDetails}
-          />
+          />     
+
         </div>
 
         <Modal

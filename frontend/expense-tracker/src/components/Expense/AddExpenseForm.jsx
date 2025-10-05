@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import Input from "../Inputs/Input";
 import EmojiPickerPopup from "../EmojiPickerPopup";
 
-
-const AddExpenseForm = ({onAddExpense , onClose}) => {
+const AddExpenseForm = ({ onAddExpense, onClose }) => {
   const [expense, setExpense] = useState({
-    category: "",
+    name: "",
     amount: "",
     date: "",
     icon: "",
@@ -17,26 +16,30 @@ const AddExpenseForm = ({onAddExpense , onClose}) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!expense.category || !expense.amount) return;
-    onAddExpense(expense);
-    setExpense({ category: "", amount: "", date: "", icon: "" });
+    if (!expense.name.trim() || !expense.amount) {
+      return; // simple validation
+    }
+    onAddExpense(expense); // gửi lên backend
+    // reset form
+    setExpense({ name: "", amount: "", date: "", icon: "" });
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {/* Emoji Picker thay cho input icon */}
+      {/* Emoji Picker cho icon */}
       <EmojiPickerPopup
         icon={expense.icon}
         onSelect={(emoji) => handleChange("icon", emoji)}
       />
-      
+
       <Input
-        label="Expense category"
-        placeholder="Rent, clothes, etc"
+        label="Expense name"
+        placeholder="e.g., Rent, Coffee, Cinema"
         type="text"
-        value={expense.category}
-        onChange={(val) => handleChange("category", val)}
+        value={expense.name}
+        onChange={(val) => handleChange("name", val)}
       />
+
       <Input
         label="Amount"
         placeholder="0"
@@ -44,6 +47,7 @@ const AddExpenseForm = ({onAddExpense , onClose}) => {
         value={expense.amount}
         onChange={(val) => handleChange("amount", val)}
       />
+
       <Input
         label="Date"
         type="date"
@@ -70,4 +74,4 @@ const AddExpenseForm = ({onAddExpense , onClose}) => {
   );
 };
 
-export default AddExpenseForm
+export default AddExpenseForm;

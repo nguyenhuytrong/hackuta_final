@@ -17,7 +17,7 @@ const CustomLineChart = ({ data }) => {
       return (
         <div className="bg-white shadow-md rounded-lg p-3 border border-gray-200">
           <p className="text-sm font-semibold text-purple-700 mb-1">
-            {data.category}
+            {data.name}
           </p>
           <p className="text-sm">
             <span className="">{data.month}</span>
