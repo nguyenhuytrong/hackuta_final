@@ -3,13 +3,16 @@
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@tailwindcss/vite": "^4.1.13",
+    "dayjs": "^1.11.18",
+    "mongoose": "^8.19.0",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.6",
     "tailwindcss": "^4.1.13"
   },
   "name": "expensetracker",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend/expense-tracker && npm run build --prefix frontend/expense-tracker",
     "start": "npm run build && npm run start --prefix backend"
