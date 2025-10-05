@@ -13,7 +13,10 @@ let genaiClient = null;
 function getGenAIClient() {
   if (genaiClient) return genaiClient;
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GENAI_API_KEY || process.env.GOOGLE_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.GENAI_API_KEY ||
+    process.env.GOOGLE_API_KEY;
 
   if (apiKey) {
     genaiClient = new GoogleGenAI({ apiKey, authType: 'API_KEY' });
@@ -25,20 +28,26 @@ function getGenAIClient() {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     // Leave auth to the library (ADC). This may still fail at runtime if ADC is misconfigured.
     genaiClient = new GoogleGenAI();
-    console.log('GenAI client initialized using Application Default Credentials (ADC).');
+    console.log(
+      'GenAI client initialized using Application Default Credentials (ADC).'
+    );
     return genaiClient;
   }
 
   // Helpful error to guide the developer to set credentials instead of letting the library
   // fail deep inside google-auth-library with a generic stack trace.
   const examples = [];
-  examples.push('PowerShell (set API key): $env:GEMINI_API_KEY = "YOUR_API_KEY"');
-  examples.push('PowerShell (use ADC file): $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\\\\path\\\\to\\\\service-account.json"');
+  examples.push(
+    'PowerShell (set API key): $env:GEMINI_API_KEY = "YOUR_API_KEY"'
+  );
+  examples.push(
+    'PowerShell (use ADC file): $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\\\\path\\\\to\\\\service-account.json"'
+  );
 
   const msg = [
     'Missing Google GenAI credentials. Provide either:',
     '- An API key in environment variable GEMINI_API_KEY (or GENAI_API_KEY / GOOGLE_API_KEY), or',
-    "- Application Default Credentials (set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON file).",
+    '- Application Default Credentials (set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON file).',
     '',
     'Example (PowerShell):',
     ...examples,
@@ -209,13 +218,49 @@ Keep it concise and natural.`;
     advice: advice.trim(),
   };
 }
+// ✅ Unified handler: can answer general chat or summaries
+async function handleGeminiChatCommand(userId, command) {
+  const lower = command.toLowerCase().trim();
+
+  // --- 1️⃣ Detect summary commands ---
+  if (lower.includes('summarize a week') || lower.includes('weekly summary')) {
+    return await getSummaryForChatbot(userId, 'week');
+  }
+
+  if (
+    lower.includes('summarize a month') ||
+    lower.includes('monthly summary')
+  ) {
+    return await getSummaryForChatbot(userId, 'month');
+  }
+
+  // --- 2️⃣ Otherwise, act like a general Gemini chatbot ---
+  const prompt = `
+You are a friendly financial assistant chatbot that helps users track and plan expenses.
+The user says: "${command}"
+Respond conversationally, give helpful answers, and keep your tone supportive.
+`;
+
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+  const response = await getGenAIClient().models.generateContent({
+    model,
+    contents: [{ type: 'text', text: prompt }],
+  });
+
+  const advice =
+    response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    'No response generated.';
+
+  return { type: 'chat', text: advice.trim() };
+}
 
 // ✅ Export functions
 module.exports = {
   calculateWeeklySummary,
   generateChatbotAdvice,
-  getSummaryForChatbot, // <-- export thêm
-  // Test helper: initialize the genai client and return whether it was created.
+  getSummaryForChatbot,
+  handleGeminiChatCommand, // ✅ new unified function
   __initGenAIClientForTest: () => {
     try {
       getGenAIClient();

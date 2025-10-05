@@ -11,7 +11,7 @@
   },
   "name": "expensetracker",
   "version": "1.0.0",
-  "description": "",
+  "description": "Try my project here https://expense-tracker-o7xm.onrender.com",
   "main": "index.js",
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend/expense-tracker && npm run build --prefix frontend/expense-tracker",
@@ -27,5 +27,6 @@
   "bugs": {
     "url": "https://github.com/trongnghia2007/Expense-tracker/issues"
   },
-  "homepage": "https://github.com/trongnghia2007/Expense-tracker#readme"
+  "homepage": "https://github.com/trongnghia2007/Expense-tracker#readme",
+  "devDependencies": {}
 }

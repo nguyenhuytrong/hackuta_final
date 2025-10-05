@@ -6,7 +6,7 @@ export default function GeminiChat() {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
 
-  // Scroll to bottom when messages change
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -14,8 +14,9 @@ export default function GeminiChat() {
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // Display user message first
-    setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+    const userMessage = input.trim();
+    setMessages((prev) => [...prev, { sender: 'user', text: userMessage }]);
+    setInput('');
 
     try {
       const res = await fetch('http://localhost:8000/api/v1/gemini', {
@@ -24,42 +25,63 @@ export default function GeminiChat() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ command: input }),
+        body: JSON.stringify({ command: userMessage }),
       });
 
       const data = await res.json();
+      console.log('[GeminiChat] Response:', data);
 
-      if (!data.response) throw new Error('No response from Gemini.');
+      if (!data || (!data.response && !data.advice))
+        throw new Error('Invalid response from Gemini.');
 
-      const summary = data.response;
+      let botText = '';
 
-      // Format summary
-      const summaryText = `
-Total expense: $${summary.totalExpense}
+      // Case 1️⃣: Gemini summary object (weekly/monthly)
+      if (data.response?.categoryBreakdown && data.response?.goal) {
+        const summary = data.response;
+        botText = `
+📊 **Expense Summary**
+Total expense: $${summary.totalExpense.toFixed(2)}
+
 Expense each category:
 ${Object.entries(summary.categoryBreakdown)
-  .map(([cat, amt]) => `- ${cat}: $${amt.toFixed(2)}`)
+  .map(([cat, amt]) => `• ${cat}: $${amt.toFixed(2)}`)
   .join('\n')}
+
 Goal: $${summary.goal}
 Comparison: ${summary.comparison}
-Gemini response: ${summary.advice}
-`;
 
-      setMessages((prev) => [...prev, { sender: 'gemini', text: summaryText }]);
+💡 Gemini advice:
+${summary.advice}
+        `;
+      }
+      // Case 2️⃣: Normal chat reply (plain text)
+      else if (data.response?.text || typeof data.response === 'string') {
+        botText = data.response.text || data.response;
+      }
+      // Case 3️⃣: Legacy format (advice only)
+      else if (data.advice) {
+        botText = data.advice;
+      } else {
+        botText = '🤔 I couldn’t generate a proper response.';
+      }
+
+      setMessages((prev) => [...prev, { sender: 'gemini', text: botText }]);
     } catch (err) {
-      console.error(err);
+      console.error('[GeminiChat] Error:', err);
       setMessages((prev) => [
         ...prev,
-        { sender: 'gemini', text: 'Something went wrong.' },
+        {
+          sender: 'gemini',
+          text: '⚠️ Something went wrong while contacting Gemini.',
+        },
       ]);
     }
-
-    setInput('');
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 20 }}>
-      {/* Icon */}
+    <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999 }}>
+      {/* Floating Icon */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
@@ -67,37 +89,40 @@ Gemini response: ${summary.advice}
             width: 60,
             height: 60,
             borderRadius: '50%',
-            backgroundColor: '#0ea5e9',
+            backgroundColor: '#8666cfff',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '20px',
             cursor: 'pointer',
+            border: 'none',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
           }}
         >
           G
         </button>
       )}
 
-      {/* Chat box */}
+      {/* Chat Box */}
       {open && (
         <div
           style={{
             width: '45vw',
             height: '80vh',
+            maxWidth: '600px',
+            maxHeight: '600px',
             border: '1px solid #ccc',
             borderRadius: 10,
             background: 'white',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            maxWidth: '600px',
-            maxHeight: '600px',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
           }}
         >
           {/* Header */}
           <div
             style={{
-              background: '#0ea5e9',
+              background: '#8666cfff',
               color: 'white',
               padding: '10px',
               display: 'flex',
@@ -105,8 +130,19 @@ Gemini response: ${summary.advice}
               alignItems: 'center',
             }}
           >
-            <span>Gemini</span>
-            <button onClick={() => setOpen(false)}>X</button>
+            <span>💬 Gemini</span>
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                background: 'transparent',
+                color: 'white',
+                border: 'none',
+                fontSize: '18px',
+                cursor: 'pointer',
+              }}
+            >
+              ✕
+            </button>
           </div>
 
           {/* Messages */}
@@ -115,24 +151,26 @@ Gemini response: ${summary.advice}
               flex: 1,
               padding: '10px',
               overflowY: 'auto',
+              background: '#f9fafb',
             }}
           >
             {messages.map((m, i) => (
               <div
                 key={i}
                 style={{
-                  marginBottom: 8,
+                  marginBottom: 10,
                   textAlign: m.sender === 'user' ? 'right' : 'left',
                 }}
               >
                 <div
                   style={{
                     display: 'inline-block',
-                    padding: '5px 10px',
-                    borderRadius: 8,
-                    background: m.sender === 'user' ? '#0ea5e9' : '#f3f4f6',
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    background: m.sender === 'user' ? '#8666cfff' : '#e5e7eb',
                     color: m.sender === 'user' ? 'white' : 'black',
                     whiteSpace: 'pre-wrap',
+                    maxWidth: '80%',
                   }}
                 >
                   {m.text}
@@ -142,16 +180,37 @@ Gemini response: ${summary.advice}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div style={{ display: 'flex', borderTop: '1px solid #ccc' }}>
+          {/* Input Area */}
+          <div
+            style={{
+              display: 'flex',
+              borderTop: '1px solid #ccc',
+              background: 'white',
+            }}
+          >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a command..."
-              style={{ flex: 1, border: 'none', padding: '10px' }}
+              placeholder="Ask Gemini anything..."
+              style={{
+                flex: 1,
+                border: 'none',
+                padding: '12px',
+                fontSize: '14px',
+                outline: 'none',
+              }}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             />
-            <button onClick={handleSend} style={{ padding: '0 10px' }}>
+            <button
+              onClick={handleSend}
+              style={{
+                padding: '0 16px',
+                background: '#0ea5e9',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
               Send
             </button>
           </div>
