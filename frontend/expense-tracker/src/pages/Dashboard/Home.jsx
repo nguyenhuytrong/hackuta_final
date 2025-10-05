@@ -24,6 +24,9 @@ const Home = () => {
 
   const [dashboardData, setDashboardData] = useState(null); // State to store API response data
   const [loading, setLoading] = useState(false); // State to track loading status
+  const [goal, setGoal] = useState("");
+  const [showMsg, setShowMsg] = useState(false);
+
 
   const fetchDashboardData = async () => {
     if (loading) return; // If already loading, do not fetch again
@@ -74,6 +77,44 @@ const Home = () => {
           />
         </div>
 
+
+        {/* Set Goal Input */}
+        <div className="mt-6 p-4 bg-white shadow rounded-xl w-full md:w-1/2 mx-auto text-center">
+          <div className="flex items-center justify-center gap-2">
+            <input
+              type="text"
+              placeholder="🎯 Set your monthly goal..."
+              className="flex-1 border border-gray-300 rounded-lg p-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 max-w-xs"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && goal.trim()) {
+                  setShowMsg(true);
+                  setTimeout(() => setShowMsg(false), 2000);
+                }
+              }}
+            />
+            <button
+              onClick={() => {
+                if (goal.trim()) {
+                  setShowMsg(true);
+                  setTimeout(() => setShowMsg(false), 2000);
+                }
+              }}
+              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Set Goal
+            </button>
+          </div>
+
+          {showMsg && (
+            <p className="text-green-600 text-sm mt-2 animate-fade-in">
+              ✅ Set goal successfully!
+            </p>
+          )}
+        </div>
+
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <RecentTransactions
             transactions={dashboardData?.recentTransactions}

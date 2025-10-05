@@ -205,7 +205,7 @@ ${summary.advice}
               onClick={handleSend}
               style={{
                 padding: '0 16px',
-                background: '#0ea5e9',
+                background: '#8666cfff',
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
