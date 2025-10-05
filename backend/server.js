@@ -45,6 +45,8 @@ connectDB().then(() => {
   app.use('/api/v1/weekly-summary', weeklySummaryRoutes);
   app.use('/api/v1/gemini', geminiRoutes);
 
+  console.log('[Gemini] server started successfully');
+
   // ---------------- Serve uploads ----------------
   app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
