@@ -1,3 +1,4 @@
+// models/Expense.js
 const mongoose = require("mongoose");
 
 const ExpenseSchema = new mongoose.Schema(
@@ -6,7 +7,9 @@ const ExpenseSchema = new mongoose.Schema(
 
     icon: { type: String },
 
-    category: { type: String, required: true }, // Example: Food, Rent, Groceries
+    name: { type: String, required: true },        // ví dụ: "coffee", "cinema ticket"
+
+    category: { type: String, required: true },    // Travel, Food & Drink, Services, ...
 
     amount: { type: Number, required: true },
 
@@ -14,5 +17,8 @@ const ExpenseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// 🧩 Tạo index giúp tìm kiếm nhanh theo category
+ExpenseSchema.index({ category: 1 });
 
 module.exports = mongoose.model("Expense", ExpenseSchema);

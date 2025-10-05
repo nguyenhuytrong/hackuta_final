@@ -21,7 +21,7 @@ export const prepareExpenseBarChartData = (data) => {
   if (!data) return [];
   return data
     .map((item) => ({
-      title: item.title || item.category,
+      title: item.name || item.category,
       date: item.date,
       amount: item.amount,
     }))
@@ -55,7 +55,7 @@ export const prepareExpenseLineChartData = (data = []) => {
   const chartData = sortedData.map((item) => ({
     month: moment(item?.date).format("Do MMM"), // ví dụ: "1st Jan"
     amount: item?.amount,
-    category: item?.category,
+    name: item?.name,
   }));
 
   return chartData;
